@@ -593,8 +593,8 @@ for k in range(1, outer_epoch+1):
 D6 = []
 SS6 = []
 S6 = []
-size_b1 = 350
-size_b2 = 350
+size_b1 = 400
+size_b2 = 400
 inner_loop = math.floor(n ** (1 / 3))
 c_1 = size_b1 ** (1 / 3) / (inner_loop + 1) ** (2 / 3)
 size_B = math.floor(c_1 ** 2 * (size_b1 * (inner_loop+1)) ** (1 / 3))
