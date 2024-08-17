@@ -220,14 +220,8 @@ class SARAH:
         return C / len(batch)
 
 
-def gmax(a, b):
-    c = np.array([0.]*len(a))
-    for i in range(len(a)):
-        if a[i] > b:
-            c[i] = a[i]
-        else:
-            c[i] = b
-    return c
+def prox_l1_norm(w, lamb, Eta):
+    return np.sign(w) * np.maximum(np.abs(w) - Eta * lamb, 0)
 
 
 # w8a
@@ -260,7 +254,9 @@ pand = 2
 c_2 = 0.3
 
 inner_loop = math.floor(1/3 * n ** (1/3))
-star = 0.157
+
+# insert global minimum as star
+star =
 
 
 
@@ -274,8 +270,7 @@ h = sarah.normalized_sigmoid_grad(w_ref)
 size_b = math.floor(n ** (1/3))
 gamma = np.sqrt(inner_loop)/4
 a_1 = 1 + 2 * size_b * inner_loop / n
-G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
 D1.append(w_ref)
 SS1.append(sarah.normalized_sigmoid_function(w_ref)-star)
 S1.append(np.linalg.norm(G, ord=2)**2)
@@ -294,7 +289,7 @@ for k in range(1, outer_epoch+1):
     omega_old_l = omega_old
     while line_search == 0:
         omega_h1 = omega_old_l + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
         v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l, batch_b) + v
         x = abs(v_new.dot(d))
@@ -307,7 +302,7 @@ for k in range(1, outer_epoch+1):
     eta2 = eta
     eta = min(eta_max, eta2)
     omega_h1 = omega_old + eta * d
-    omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+    omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D1.append(omega)
     for j in range(1, inner_loop+1):
@@ -335,7 +330,7 @@ for k in range(1, outer_epoch+1):
         omega_old_l = omega_old
         while line_search == 0:
             omega_h1 = omega_old_l + eta * d
-            omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+            omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
             omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
             v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l,
                                                                                                     batch_b) + v
@@ -349,13 +344,12 @@ for k in range(1, outer_epoch+1):
         eta = min(eta_max, eta)
         
         omega_h1 = omega_old + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega = (1 - gamma) * omega_old + gamma * omega_h2
         D1.append(omega)
     h = v
     w_ref = D1[-1]
-    G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
     SS1.append(sarah.normalized_sigmoid_function(w_ref) - star)
     S1.append(np.linalg.norm(G, ord=2) ** 2)
     D1 = []
@@ -372,8 +366,7 @@ size_b = math.floor(n ** (1/3))
 gamma = np.sqrt(inner_loop)/4
 a_2 = 1 + 2 * size_b * inner_loop / n
 
-G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
 D2.append(w_ref)
 SS2.append(sarah.normalized_sigmoid_function(w_ref)-star)
 S2.append(np.linalg.norm(G, ord=2)**2)
@@ -390,7 +383,7 @@ for k in range(1, outer_epoch+1):
     omega_old_l = omega_old
     while line_search == 0:
         omega_h1 = omega_old_l + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
         v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l,
                                                                                                 batch_b) + v
@@ -403,7 +396,7 @@ for k in range(1, outer_epoch+1):
             line_search = 1
     eta = min(eta_max, eta)
     omega_h1 = omega_old + eta * d
-    omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+    omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D2.append(omega)
     for j in range(1, inner_loop+1):
@@ -432,7 +425,7 @@ for k in range(1, outer_epoch+1):
         omega_old_l = omega_old
         while line_search == 0:
             omega_h1 = omega_old_l + eta * d
-            omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+            omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
             omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
             v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l,
                                                                                                     batch_b) + v
@@ -445,13 +438,12 @@ for k in range(1, outer_epoch+1):
                 line_search = 1
         eta = min(eta_max, eta)
         omega_h1 = omega_old + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega = (1 - gamma) * omega_old + gamma * omega_h2
         D2.append(omega)
     h = v
     w_ref = D2[-1]
-    G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
     SS2.append(sarah.normalized_sigmoid_function(w_ref) - star)
     S2.append(np.linalg.norm(G, ord=2) ** 2)
     D2 = []
@@ -467,8 +459,7 @@ size_b = math.floor(n ** (1/3))
 gamma = np.sqrt(inner_loop)/4
 a_3 = 1 + 2 * size_b * inner_loop / n
 
-G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
 D3.append(w_ref)
 SS3.append(sarah.normalized_sigmoid_function(w_ref)-star)
 S3.append(np.linalg.norm(G, ord=2)**2)
@@ -485,7 +476,7 @@ for k in range(1, outer_epoch+1):
     omega_old_l = omega_old
     while line_search == 0:
         omega_h1 = omega_old_l + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
         v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l, batch_b) + v
         x = abs(v_new.dot(d))
@@ -498,7 +489,7 @@ for k in range(1, outer_epoch+1):
     eta2 = eta
     eta = min(eta_max, eta2)
     omega_h1 = omega_old + eta * d
-    omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+    omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D3.append(omega)
     for j in range(1, inner_loop+1):
@@ -527,7 +518,7 @@ for k in range(1, outer_epoch+1):
         omega_old_l = omega_old
         while line_search == 0:
             omega_h1 = omega_old_l + eta * d
-            omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+            omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
             omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
             v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l,
                                                                                                     batch_b) + v
@@ -540,13 +531,11 @@ for k in range(1, outer_epoch+1):
                 line_search = 1
         eta = min(eta_max, eta)
         omega_h1 = omega_old + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega = (1 - gamma) * omega_old + gamma * omega_h2
         D3.append(omega)
-    h = v
     w_ref = D3[-1]
-    G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
     SS3.append(sarah.normalized_sigmoid_function(w_ref) - star-0.001)
     S3.append(np.linalg.norm(G, ord=2) ** 2)
     D3 = []
@@ -561,8 +550,7 @@ size_b = math.floor(n ** (1/3))
 gamma = np.sqrt(inner_loop)/4
 a_4 = 1 + 2 * size_b * inner_loop / n
 
-G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
 D4.append(w_ref)
 SS4.append(sarah.normalized_sigmoid_function(w_ref)-star)
 S4.append(np.linalg.norm(G, ord=2)**2)
@@ -579,7 +567,7 @@ for k in range(1, outer_epoch+1):
     omega_old_l = omega_old
     while line_search == 0:
         omega_h1 = omega_old_l + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
         v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l,
                                                                                                 batch_b) + v
@@ -592,7 +580,7 @@ for k in range(1, outer_epoch+1):
             line_search = 1
     eta = min(eta_max, eta)
     omega_h1 = omega_old + eta * d
-    omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+    omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D4.append(omega)
     for j in range(1, inner_loop+1):
@@ -621,7 +609,7 @@ for k in range(1, outer_epoch+1):
         omega_old_l = omega_old
         while line_search == 0:
             omega_h1 = omega_old_l + eta * d
-            omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+            omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
             omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
             v_new = sarah.normalized_sigmoid_grad(omega_l, batch_b) - sarah.normalized_sigmoid_grad(omega_old_l,
                                                                                                     batch_b) + v
@@ -634,13 +622,11 @@ for k in range(1, outer_epoch+1):
                 line_search = 1
         eta = min(eta_max, eta)
         omega_h1 = omega_old + eta * d
-        omega_h2 = np.sign(omega_h1) * gmax((np.abs(omega_h1) - eta * lam1), 0)
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega = (1 - gamma) * omega_old + gamma * omega_h2
         D4.append(omega)
-    h = v
     w_ref = D4[-1]
-    G = (w_ref - np.sign(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) * gmax(
-        (np.abs(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref)) - 0.5 * lam1), 0)) / 0.5
+    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.normalized_sigmoid_grad(w_ref), lam1, 0.5)) / 0.5
     SS4.append(sarah.normalized_sigmoid_function(w_ref) - star-0.001)
     S4.append(np.linalg.norm(G, ord=2) ** 2)
     D4 = []
@@ -649,8 +635,8 @@ for k in range(1, outer_epoch+1):
 
 
 plt.figure()
-plt.xlabel('Number of Effective Passes')
-plt.ylabel(r'$P(\widetilde{w}_s)-P(w_{*})$')
+plt.xlabel('Number of Effective Passes', fontsize=14)
+plt.ylabel(r'$P(\widetilde{w}_s)-P(w_{*})$', fontsize=14)
 plt.xlim(0, outer_epoch)
 plt.xticks(range(0, outer_epoch+1, 5))
 # plt.ylim(0, 10 ** (-1))
@@ -659,20 +645,16 @@ line1, = plt.semilogy(a_1 * pass1, SS1, linestyle='--', linewidth=2.5, marker=".
 line2, = plt.semilogy(a_2 * pass1, SS2, linestyle='--', linewidth=2.5, marker="o", color='lightpink', label=r'v2')
 line3, = plt.semilogy(a_3 * pass1, SS3, linestyle='-', linewidth=2.5, marker="<", color='deepskyblue', label=r'RS-v1')
 line4, = plt.semilogy(a_4 * pass1, SS4, linestyle='-', linewidth=2.5, marker=">", color='lightgreen', label=r'RS-v2')
-# line5, = plt.semilogy(a_5 * pass1, SS5, linestyle='-', linewidth=2, marker="3", color='silver', label=r'v5')
-# line6, = plt.semilogy(a_6 * pass1, SS6, linestyle='-', linewidth=2, marker="<", color='gold', label=r'v6')
-# line7, = plt.semilogy(a_7 * pass1, SS7, linestyle='--', linewidth=2, color='green', label=r'v7')
-# line8, = plt.semilogy(pass1, SS8, linestyle='-', linewidth=2.5, color='plum', label=r'MB-SARAH-RCBB(8)+')
 font1 = {'size': 7}
 plt.legend(handles=[line1, line2, line3, line4], prop=font1)
-# plt.savefig('p1_a9a_l.png', dpi=600)
+# plt.savefig('p2_gisette_l.png', dpi=600)
 plt.show()
 
 
 
 plt.figure()
-plt.xlabel('Number of Effective Passes')
-plt.ylabel(r'Norm of Gradient Mapping $||\mathcal{G}_{\eta}(\widetilde{w}_{s})||^2$')
+plt.xlabel('Number of Effective Passes', fontsize=14)
+plt.ylabel(r'$||\mathcal{G}_{\eta}(\widetilde{w}_{s})||^2$', fontsize=14)
 plt.xlim(0, outer_epoch)
 plt.xticks(range(0, outer_epoch+1, 5))
 # plt.ylim(0, 10 ** (-5))
@@ -681,11 +663,7 @@ line1, = plt.semilogy(a_1 * pass1, S1, linestyle='--', linewidth=2.5, marker="."
 line2, = plt.semilogy(a_2 * pass1, S2, linestyle='--', linewidth=2.5, marker="o", color='lightpink', label=r'v2')
 line3, = plt.semilogy(a_3 * pass1, S3, linestyle='-', linewidth=2.5, marker="<", color='deepskyblue', label=r'RS-v1')
 line4, = plt.semilogy(a_4 * pass1, S4, linestyle='-', linewidth=2.5, marker=">", color='lightgreen', label=r'RS-v2')
-# line5, = plt.semilogy(a_5 * pass1, S5, linestyle='-', linewidth=2, marker="3", color='silver', label=r'v5')
-# line6, = plt.semilogy(a_6 * pass1, S6, linestyle='-', linewidth=2, marker="<", color='gold', label=r'v6')
-# line7, = plt.semilogy(a_7 * pass1, S7, linestyle='--', linewidth=2, color='green', label=r'v7')
-# line8, = plt.semilogy(pass1, SS8, linestyle='-', linewidth=2.5, color='plum', label=r'MB-SARAH-RCBB(8)+')
 font1 = {'size': 7}
 plt.legend(handles=[line1, line2, line3, line4], prop=font1)
-# plt.savefig('p1_a9a_G.png', dpi=600)
+# plt.savefig('p2_gisette_G.png', dpi=600)
 plt.show()

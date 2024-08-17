@@ -5,13 +5,14 @@ from sklearn.preprocessing import normalize
 import random
 import matplotlib.pyplot as plt
 
-def data_generate(n, dim, input_file="", output_file=" ",):
+
+def data_generate(n, dim, input_file="", output_file=" ", ):
     y_train, x_train = svm_read_problem(input_file)
     temp = []
     for row in x_train:
         for b in range(1, dim + 1):
             row.setdefault(b, 0)
-        temp.append([row[b] for b in range(1, dim+1)])
+        temp.append([row[b] for b in range(1, dim + 1)])
     x_train = np.array(temp, dtype='float32').reshape(n, dim)
     y_train = np.array(y_train, dtype='float32')
     f = open(output_file, 'wb')
@@ -83,7 +84,6 @@ class SARAH:
         uu = np.sum(np.log(np.exp(-data.dot(w) * target) + 1)) / len(batch)
         return uu
 
-
     def logistic_indiv_grad(self, w, batch=None):
         if batch is None:
             batch = list(range(self.num))
@@ -93,18 +93,16 @@ class SARAH:
         g = np.sum(np.einsum("nm,n->nm", data, e), axis=0) / len(batch)
         return g + self.lam2 * w
 
-
     def logistic_indiv_grad2(self, w, plist, batch=None):
         if batch is None:
             batch = list(range(self.num))
         data = self.train_set[0][batch]
         target = self.train_set[1][batch]
         e = (np.exp(-data.dot(w) * target) * (-target)) / (np.exp(-data.dot(w) * target) + 1)
-        zz = 1/(np.array(plist)[batch]*self.num)
+        zz = 1 / (np.array(plist)[batch] * self.num)
         data = np.einsum("nm,n->nm", data, zz)
         g = np.sum(np.einsum("nm,n->nm", data, e), axis=0) / len(batch)
         return g + self.lam2 * w
-
 
     def logistic_indiv_grad3(self, w, batch=None):
         if batch is None:
@@ -122,8 +120,10 @@ class SARAH:
         for i in batch:
             data = self.train_set[0][i]
             target = self.train_set[1][i]
-            Hessian.append(np.exp(-w.dot(data)*target)*target**2 / (1+np.exp(-w.dot(data)*target))**2 * np.einsum("n,m->nm", data, data))
-        return sum(Hessian)/len(Hessian)
+            Hessian.append(
+                np.exp(-w.dot(data) * target) * target ** 2 / (1 + np.exp(-w.dot(data) * target)) ** 2 * np.einsum(
+                    "n,m->nm", data, data))
+        return sum(Hessian) / len(Hessian)
 
     def normalized_sigmoid_function(self, w, batch=None):
         if batch is None:
@@ -135,7 +135,7 @@ class SARAH:
             A = np.exp(data[i].dot(w) * target[i])
             B = np.exp(-data[i].dot(w) * target[i])
             C = C + 2 * B / (A + B)
-        return C/len(batch)
+        return C / len(batch)
 
     def normalized_sigmoid_grad(self, w, batch=None):
         if batch is None:
@@ -157,7 +157,7 @@ class SARAH:
         C = 0
         for i in range(len(batch)):
             A = 1 + np.exp(-data[i].dot(w) * target[i])
-            C = C + (1 - 1/A) ** 2
+            C = C + (1 - 1 / A) ** 2
         return C / len(batch)
 
     def neural_network_grad(self, w, batch=None):
@@ -168,7 +168,7 @@ class SARAH:
         C = 0
         for i in range(len(batch)):
             A = 1 + np.exp(-data[i].dot(w) * target[i])
-            C = C + 2 * (1 - 1/A) * (-target[i] * (A - 1) * data[i] / (A ** 2))
+            C = C + 2 * (1 - 1 / A) * (-target[i] * (A - 1) * data[i] / (A ** 2))
         return C / len(batch)
 
     def difference_logistic_function(self, w, batch=None):
@@ -223,6 +223,7 @@ class SARAH:
 def prox_l1_norm(w, lamb, Eta):
     return np.sign(w) * np.maximum(np.abs(w) - Eta * lamb, 0)
 
+
 # w8a
 n_1 = 49749
 d_1 = 300
@@ -242,46 +243,45 @@ lambda_4 = 6 * 10 ** (-8)
 
 
 
-
 n = n_3
 lam1 = lambda_3
 lam2 = 0
 
 
 sarah = SARAH('gisette', 0, lam2)
-outer_epoch = 50
+outer_epoch = 55
 # insert global minimum as star
 star =
-L = 0.15405
+L = 4
+
+
+
+
 
 # Acc-Prox-CG-SARAH
-D1 = []  
-SS1 = []
+D1 = []
 S1 = []
 # threshold
 rho = 1
 beta_o = 1
-eta_max = 20
+eta_max = 4
 pand = 1.5
 inner_loop = math.floor(1/3 * n ** (1/3))
 gamma = np.sqrt(inner_loop)/4
 size_b = math.floor(n ** (1/3))
-
-c_2 = 0.1
-#
-a_1 = 1 + 2 * size_b * inner_loop / n
+c_2 = 0.9
 
 w_ref = np.array([0.]*sarah.dim)
-G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
 D1.append(w_ref)
-SS1.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-S1.append(np.linalg.norm(G, ord=2) ** 2)
 
-h = sarah.neural_network_grad(w_ref)
+a1 = 0
+pass1 = []
+
+h = sarah.lorenz_grad(w_ref)
 for k in range(1, outer_epoch+1):
     omega = w_ref
     omega_old = omega
-    v = sarah.neural_network_grad(omega)
+    v = sarah.lorenz_grad(omega)
     v_old = v
     d = -h
     eta = 0.1
@@ -292,7 +292,7 @@ for k in range(1, outer_epoch+1):
         omega_h1 = omega_old_l + eta * d
         omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
-        v_new = sarah.neural_network_grad(omega_l, batch_b) - sarah.neural_network_grad(omega_old_l, batch_b) + v
+        v_new = sarah.lorenz_grad(omega_l, batch_b) - sarah.lorenz_grad(omega_old_l, batch_b) + v
         x = abs(v_new.dot(d))
         y = -c_2 * v.dot(d)
         if abs(v_new.dot(d)) > -c_2 * v.dot(d):
@@ -306,9 +306,16 @@ for k in range(1, outer_epoch+1):
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D1.append(omega)
     for j in range(1, inner_loop+1):
-        v = sarah.neural_network_grad(omega, batch_b) - sarah.neural_network_grad(omega_old, batch_b) + v_old
+        if j == 1:
+            a1 += 2
+            pass1.append(a1)
+        else:
+            a1 += 1
+            pass1.append(a1)
+        v = sarah.lorenz_grad(omega, batch_b) - sarah.lorenz_grad(omega_old, batch_b) + v_old
         # beta1-FR
         beta1 = min(rho*np.linalg.norm(v, ord=2)**2/np.linalg.norm(v_old, ord=2)**2, beta_o)
+        S1.append(beta1)
         # beta2-FRPR
         beta_PR = v.dot(v-v_old)/np.linalg.norm(v_old, ord=2)**2
         beta_FR = np.linalg.norm(v, ord=2)**2/np.linalg.norm(v_old, ord=2)**2
@@ -332,7 +339,7 @@ for k in range(1, outer_epoch+1):
             omega_h1 = omega_old_l + eta * d
             omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
             omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
-            v_new = sarah.neural_network_grad(omega_l, batch_b) - sarah.neural_network_grad(omega_old_l, batch_b) + v
+            v_new = sarah.lorenz_grad(omega_l, batch_b) - sarah.lorenz_grad(omega_old_l, batch_b) + v
             x = abs(v_new.dot(d))
             y = -c_2 * v.dot(d)
             if abs(v_new.dot(d)) > -c_2 * v.dot(d):
@@ -347,42 +354,32 @@ for k in range(1, outer_epoch+1):
         D1.append(omega)
     h = v
     w_ref = D1[-1]
-    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-    SS1.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-    S1.append(np.linalg.norm(G, ord=2) ** 2)
     D1 = []
 
 
 # Acc-Prox-CG-SARAH-RS
-D2 = []  
-SS2 = []
+D2 = []
 S2 = []
 # threshold
 rho = 1
 beta_o = 1
-eta_max = 20
-
+eta_max = 4
 pand = 1.5
-
 inner_loop = math.floor(1/3 * n ** (1/3))
 gamma = np.sqrt(inner_loop)/4
 size_b = math.floor(n ** (1/3))
-
-c_2 = 0.1
-#
-a_2 = 1 + 2 * size_b * inner_loop / n
+c_2 = 0.9
 
 w_ref = np.array([0.]*sarah.dim)
-G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
 D2.append(w_ref)
-SS2.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-S2.append(np.linalg.norm(G, ord=2) ** 2)
 
+a2 = 0
+pass2 = []
 
 for k in range(1, outer_epoch+1):
     omega = w_ref
     omega_old = omega
-    v = sarah.neural_network_grad(omega)
+    v = sarah.lorenz_grad(omega)
     v_old = v
     d = -v
     eta = 0.1
@@ -393,7 +390,7 @@ for k in range(1, outer_epoch+1):
         omega_h1 = omega_old_l + eta * d
         omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
-        v_new = sarah.neural_network_grad(omega_l, batch_b) - sarah.neural_network_grad(omega_old_l, batch_b) + v
+        v_new = sarah.lorenz_grad(omega_l, batch_b) - sarah.lorenz_grad(omega_old_l, batch_b) + v
         x = abs(v_new.dot(d))
         y = -c_2 * v.dot(d)
         if abs(v_new.dot(d)) > -c_2 * v.dot(d):
@@ -407,9 +404,16 @@ for k in range(1, outer_epoch+1):
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D2.append(omega)
     for j in range(1, inner_loop+1):
-        v = sarah.neural_network_grad(omega, batch_b) - sarah.neural_network_grad(omega_old, batch_b) + v_old
+        if j == 1:
+            a2 += 2
+            pass2.append(a2)
+        else:
+            a2 += 1
+            pass2.append(a2)
+        v = sarah.lorenz_grad(omega, batch_b) - sarah.lorenz_grad(omega_old, batch_b) + v_old
         # beta1-FR
         beta1 = min(rho*np.linalg.norm(v, ord=2)**2/np.linalg.norm(v_old, ord=2)**2, beta_o)
+        S2.append(beta1)
         # beta2-FRPR
         beta_PR = v.dot(v-v_old)/np.linalg.norm(v_old, ord=2)**2
         beta_FR = np.linalg.norm(v, ord=2)**2/np.linalg.norm(v_old, ord=2)**2
@@ -433,7 +437,7 @@ for k in range(1, outer_epoch+1):
             omega_h1 = omega_old_l + eta * d
             omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
             omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
-            v_new = sarah.neural_network_grad(omega_l, batch_b) - sarah.neural_network_grad(omega_old_l, batch_b) + v
+            v_new = sarah.lorenz_grad(omega_l, batch_b) - sarah.lorenz_grad(omega_old_l, batch_b) + v
             x = abs(v_new.dot(d))
             y = -c_2 * v.dot(d)
             if abs(v_new.dot(d)) > -c_2 * v.dot(d):
@@ -447,264 +451,133 @@ for k in range(1, outer_epoch+1):
         omega = (1 - gamma) * omega_old + gamma * omega_h2
         D2.append(omega)
     w_ref = D2[-1]
-    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-    SS2.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-    S2.append(np.linalg.norm(G, ord=2) ** 2)
     D2 = []
 
 
-# ProxSARAH
+# Acc-Prox-CG-SARAH-ST
 D3 = []
-SS3 = []
 S3 = []
-gamma = 0.99
-eta = 2 / (4 + L * gamma)
-C1 = 2 / (3 * L ** 2 * gamma ** 2)
-size_b = math.floor(n ** (1 / 3) / C1)
-inner_loop = math.floor(n ** (1 / 3))
-a_3 = 1 + 2 * size_b * inner_loop / n
+# threshold
+rho = 1
+beta_o = 1
+eta_max = 4
+pand = 1.5
+inner_loop = math.floor(1/3 * n ** (1/3))
+gamma = np.sqrt(inner_loop)/4
+size_b = math.floor(n ** (1/3))
+c_2 = 0.9
 
 w_ref = np.array([0.]*sarah.dim)
-G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.55
 D3.append(w_ref)
-SS3.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-S3.append(np.linalg.norm(G, ord=2) ** 2)
 
+t = 5
+fixed_eta = 1 / L
+
+a3 = 0
+pass3 = []
+
+h = sarah.lorenz_grad(w_ref)
 for k in range(1, outer_epoch+1):
     omega = w_ref
     omega_old = omega
-    v = sarah.neural_network_grad(omega)
+    v = sarah.lorenz_grad(omega)
     v_old = v
-    omega_h1 = omega_old - eta * v
+    d = -h
+    eta = 0.1
+    line_search = 0
+    batch_b = random.sample(list(range(sarah.num)), size_b)
+    omega_old_l = omega_old
+    while line_search == 0:
+        omega_h1 = omega_old_l + eta * d
+        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
+        omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
+        v_new = sarah.lorenz_grad(omega_l, batch_b) - sarah.lorenz_grad(omega_old_l, batch_b) + v
+        x = abs(v_new.dot(d))
+        y = -c_2 * v.dot(d)
+        if abs(v_new.dot(d)) > -c_2 * v.dot(d):
+            eta = pand * eta
+            omega_old_l = omega_old
+        else:
+            line_search = 1
+    eta = min(eta_max, eta)
+    omega_h1 = omega_old + eta * d
     omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
     omega = (1 - gamma) * omega_old + gamma * omega_h2
     D3.append(omega)
     for j in range(1, inner_loop+1):
-        batch_b = random.sample(list(range(sarah.num)), size_b)
-        v = sarah.neural_network_grad(omega, batch_b) - sarah.neural_network_grad(omega_old, batch_b) + v_old
-        v_old = v
+        if j % t == 0:
+            if j == t and k != 1:
+                a3 += inner_loop - inner_loop // t * t + t + 1
+                pass3.append(a3)
+            elif j == t and k == 1:
+                a3 += t + 1
+                pass3.append(a3)
+            else:
+                a3 += t
+                pass3.append(a3)
+            v = sarah.lorenz_grad(omega, batch_b) - sarah.lorenz_grad(omega_old, batch_b) + v_old
+            # beta1-FR
+            beta1 = min(rho*np.linalg.norm(v, ord=2)**2/np.linalg.norm(v_old, ord=2)**2, beta_o)
+            S3.append(beta1)
+            # beta2-FRPR
+            beta_PR = v.dot(v-v_old)/np.linalg.norm(v_old, ord=2)**2
+            beta_FR = np.linalg.norm(v, ord=2)**2/np.linalg.norm(v_old, ord=2)**2
+            beta_FRPR = 0
+            if beta_PR < -beta_FR:
+                beta_FRPR = -beta_FR
+            elif abs(beta_PR) <= beta_FR:
+                beta_FRPR = beta_PR
+            else:
+                beta_FRPR = beta_FR
+            beta2 = beta_FRPR
+            d = -v + beta1*d
+        else:
+            d = -v
+        if (j+1) % t == 0:
+            eta = 0.1
+            line_search = 0
+            batch_b = random.sample(list(range(sarah.num)), size_b)
+            omega_old_l = omega_old
+            while line_search == 0:
+                omega_h1 = omega_old_l + eta * d
+                omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
+                omega_l = (1 - gamma) * omega_old_l + gamma * omega_h2
+                v_new = sarah.lorenz_grad(omega_l, batch_b) - sarah.lorenz_grad(omega_old_l, batch_b) + v
+                x = abs(v_new.dot(d))
+                y = -c_2 * v.dot(d)
+                if abs(v_new.dot(d)) > -c_2 * v.dot(d):
+                    eta = pand * eta
+                    omega_old_l = omega_old
+                else:
+                    line_search = 1
+        else:
+            eta = fixed_eta
+        eta = min(eta_max, eta)
         omega_old = omega
-        omega_h1 = omega_old - eta * v
+        v_old = v
+        omega_h1 = omega_old + eta * d
         omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
         omega = (1 - gamma) * omega_old + gamma * omega_h2
         D3.append(omega)
+    h = v
     w_ref = D3[-1]
-    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-    SS3.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-    S3.append(np.linalg.norm(G, ord=2) ** 2)
     D3 = []
 
 
 
-# Prox-Spiderboost
-D4 = []
-SS4 = []
-S4 = []
-eta = 1 / (2 * L)
-size_b = math.floor(n ** (1 / 2))
-inner_loop = math.floor(n ** (1 / 2))
-a_4 = 1 + 2 * size_b * inner_loop / n
-
-w_ref = np.array([0.]*sarah.dim)
-G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-D4.append(w_ref)
-SS4.append(sarah.neural_network_function(w_ref) - star)
-S4.append(np.linalg.norm(G, ord=2) ** 2)
-
-for k in range(1, outer_epoch+1):
-    omega = w_ref
-    omega_old = omega
-    v = sarah.neural_network_grad(omega)
-    v_old = v
-    omega_h = omega_old - eta * v
-    omega = prox_l1_norm(omega_h, lam1, eta)
-    D4.append(omega)
-    for j in range(1, inner_loop+1):
-        batch_b = [random.choice(list(range(sarah.num))) for i in range(size_b)]
-        v = sarah.neural_network_grad(omega, batch_b) - sarah.neural_network_grad(omega_old, batch_b) + v_old
-        v_old = v
-        omega_old = omega
-        omega_h = omega_old - eta * v
-        omega = prox_l1_norm(omega_h, lam1, eta)
-        D4.append(omega)
-    w_ref = D4[-1]
-    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-    SS4.append(sarah.neural_network_function(w_ref) - star)
-    S4.append(np.linalg.norm(G, ord=2) ** 2)
-    D4 = []
-
-
-# # Alternative codes for Algorithm: Prox-Spiderboost
-# D4 = []
-# SS4 = []
-# S4 = []
-# size_b = math.floor(n ** (1 / 2))
-# q = math.floor(n ** (1 / 2))
-# eta = 1 / (2 * L)
-# a_4 = 0
-# # a_4 = 1 + 2 * size_b * q / n
-#
-# w0 = np.array([0.]*sarah.dim)
-# omega = w0
-# G = (omega - prox_l1_norm(omega - 0.5 * sarah.neural_network_grad(omega), lam1, 0.5)) / 0.5
-# SS4.append(sarah.neural_network_function(omega) + lam1 * np.linalg.norm(omega, 1) - star)
-# S4.append(np.linalg.norm(G, ord=2) ** 2)
-# pass4 = [0]
-#
-# v = 0
-# v_old = 0
-# omega_old = 0
-#
-# for k in range(0, q * outer_epoch):
-#     if k % q == 0:
-#         v = sarah.neural_network_grad(omega)
-#         a_4 += 1
-#         pass4.append(a_4)
-#     else:
-#         batch_b = [random.choice(list(range(sarah.num))) for i in range(size_b)]
-#         v = sarah.neural_network_grad(omega, batch_b) - sarah.neural_network_grad(omega_old, batch_b) + v_old
-#         a_4 += 2 * size_b / n
-#         pass4.append(a_4)
-#     v_old = v
-#     omega_old = omega
-#     omega = prox_l1_norm(omega_old - eta * v_old, lam1, eta)
-#     G = (omega - prox_l1_norm(omega - 0.5 * sarah.neural_network_grad(omega), lam1, 0.5)) / 0.5
-#     SS4.append(sarah.neural_network_function(omega) + lam1 * np.linalg.norm(omega, 1) - star)
-#     S4.append(np.linalg.norm(G, ord=2) ** 2)
-
-
-# ProxSVRG+
-D5 = []
-SS5 = []
-S5 = []
-eta = 1 / (6 * L)
-size_B = math.floor(n / 5)
-size_b = math.floor(n ** (2 / 3))
-inner_loop = math.floor(np.sqrt(size_b))
-a_5 = (size_B + 2 * size_b * inner_loop) / n
-
-w_ref = np.array([0.]*sarah.dim)
-G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-D5.append(w_ref)
-SS5.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-S5.append(np.linalg.norm(G, ord=2) ** 2)
-
-
-for k in range(1, outer_epoch+1):
-    omega = w_ref
-    omega_old = omega
-    batch_B = random.sample(list(range(sarah.num)), size_B)
-    phi = sarah.neural_network_grad(w_ref, batch_B)
-    v = phi
-    omega_h = omega_old - eta * v
-    omega = prox_l1_norm(omega_h, lam1, eta)
-    D5.append(omega)
-    for j in range(1, inner_loop+1):
-        batch_b = random.sample(list(range(sarah.num)), size_b)
-        v = sarah.neural_network_grad(omega, batch_b) - sarah.neural_network_grad(w_ref, batch_b) + phi
-        omega_old = omega
-        omega_h = omega_old - eta * v
-        omega = prox_l1_norm(omega_h, lam1, eta)
-        D5.append(omega)
-    w_ref = D5[-1]
-    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-    SS5.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-    S5.append(np.linalg.norm(G, ord=2) ** 2)
-    D5 = []
-
-
-# ProxHSGD-RS
-D6 = []
-SS6 = []
-S6 = []
-size_b1 = 500
-size_b2 = 500
-inner_loop = math.floor(n ** (1 / 3))
-c_1 = size_b1 ** (1 / 3) / (inner_loop + 1) ** (2 / 3)
-size_B = math.floor(c_1 ** 2 * (size_b1 * (inner_loop+1)) ** (1 / 3))
-gamma = 0.95
-eta = 1 / L
-beta = 1 - np.sqrt(size_b2) / np.sqrt(size_B * (inner_loop + 1))
-a_6 = (size_B + (2 * size_b1 + size_b2) * inner_loop) / n
-
-w_ref = np.array([0.]*sarah.dim)
-G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-D6.append(w_ref)
-SS6.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-S6.append(np.linalg.norm(G, ord=2) ** 2)
-
-
-for k in range(1, outer_epoch+1):
-    omega = w_ref
-    omega_old = omega
-    batch_B = random.sample(list(range(sarah.num)), size_B)
-    v = sarah.neural_network_grad(omega, batch_B)
-    v_old = v
-    omega_h1 = omega_old - eta * v
-    omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
-    omega = (1 - gamma) * omega_old + gamma * omega_h2
-    D6.append(omega)
-    for j in range(1, inner_loop+1):
-        batch_b1 = random.sample(list(range(sarah.num)), size_b1)
-        batch_b2 = random.sample(list(range(sarah.num)), size_b2)
-        v = beta * v_old + beta * (sarah.neural_network_grad(omega, batch_b1) - sarah.neural_network_grad(omega_old, batch_b1)) \
-            + (1 - beta) * sarah.neural_network_grad(omega, batch_b2)
-        omega_old = omega
-        v_old = v
-        omega_h1 = omega_old - eta * v
-        omega_h2 = prox_l1_norm(omega_h1, lam1, eta)
-        omega = (1 - gamma) * omega_old + gamma * omega_h2
-        D6.append(omega)
-    w_ref = D6[-1]  # RS
-    G = (w_ref - prox_l1_norm(w_ref - 0.5 * sarah.neural_network_grad(w_ref), lam1, 0.5)) / 0.5
-    SS6.append(sarah.neural_network_function(w_ref) + lam1 * np.linalg.norm(w_ref, 1) - star)
-    S6.append(np.linalg.norm(G, ord=2) ** 2)
-    D6 = []
-
-
+S9 = [1] * inner_loop * outer_epoch
 
 
 plt.figure()
-plt.xlabel('Number of Effective Passes', fontsize=14)
-plt.ylabel(r'$P(\widetilde{w}_s)-P(w_{*})$', fontsize=14)
-plt.xlim(0, outer_epoch)
-plt.xticks(range(0, outer_epoch+1, 1))
-# plt.ylim(0, 10 ** (-1))
-pass1 = np.array([int(i) for i in range(0, outer_epoch+1)])
-line1, = plt.semilogy(a_1 * pass1, SS1, linestyle='--', linewidth=2.5, marker=".", color='brown', label=r'Acc-Prox-CG-SARAH')
-line2, = plt.semilogy(a_2 * pass1, SS2, linestyle='--', linewidth=2.5, marker="o", color='lightpink', label=r'Acc-Prox-CG-SARAH-RS')
-line3, = plt.semilogy(a_3 * pass1, SS3, linestyle='-', linewidth=2.5, marker="<", color='darkviolet', label=r'ProxSARAH')
-line4, = plt.semilogy(a_4 * pass1, SS4, linestyle='-', linewidth=2.5, marker=">", color='limegreen', label=r'Prox-Spiderboost')
-# line4, = plt.semilogy(pass4, SS4, linestyle='-', linewidth=2.5, marker=">", color='limegreen', label=r'Prox-Spiderboost')
-line5, = plt.semilogy(a_5 * pass1, SS5, linestyle='-', linewidth=2.5, marker="s", color='silver', label=r'ProxSVRG+')
-line6, = plt.semilogy(a_6 * pass1, SS6, linestyle='-', linewidth=2.5, marker="<", color='gold', label=r'ProxHSGD-RS')
-# line7, = plt.semilogy(a_7 * pass1, SS7, linestyle='--', linewidth=2, color='green', label=r'v7')
-# line8, = plt.semilogy(pass1, SS8, linestyle='-', linewidth=2.5, color='plum', label=r'MB-SARAH-RCBB(8)+')
+plt.xlabel('Number of Iterations')
+plt.ylabel(r'$\beta_k$')
+# plt.xlim(0, outer_epoch * inner_loop)
+plt.xticks(range(0, outer_epoch * (inner_loop+1) + 1, 100))
+# plt.yticks([0, 1])
+line1, = plt.plot(pass1, S1, linestyle='--', linewidth=1.5, color='brown', label=r'Acc-Prox-CG-SARAH')
+line2, = plt.plot(pass2, S2, linestyle='--', linewidth=1.5, color='lightpink', label=r'Acc-Prox-CG-SARAH-RS')
+line3 = plt.scatter(pass3, S3, s=15, color='blue', label=r'Acc-Prox-CG-SARAH-ST')
+line9, = plt.plot(pass1, S9, linestyle='-', linewidth=2, color='green', label=r'Bound')
 font1 = {'size': 7}
-plt.legend(handles=[line1, line2, line3, line4, line5, line6], prop=font1)
-# plt.savefig('D:\Fig\p4_gisette_l.eps', dpi=600)
-plt.show()
-
-
-
-
-plt.figure()
-plt.xlabel('Number of Effective Passes', fontsize=14)
-plt.ylabel(r'$||\mathcal{G}_{\eta}(\widetilde{w}_{s})||^2$', fontsize=14)
-plt.xlim(0, outer_epoch)
-plt.xticks(range(0, outer_epoch+1, 1))
-# plt.ylim(0, 10 ** (-5))
-pass1 = np.array([int(i) for i in range(0, outer_epoch+1)])
-line1, = plt.semilogy(a_1 * pass1, S1, linestyle='--', linewidth=2.5, marker=".", color='brown', label=r'Acc-Prox-CG-SARAH')
-line2, = plt.semilogy(a_2 * pass1, S2, linestyle='--', linewidth=2.5, marker="o", color='lightpink', label=r'Acc-Prox-CG-SARAH-RS')
-line3, = plt.semilogy(a_3 * pass1, S3, linestyle='-', linewidth=2.5, marker="<", color='darkviolet', label=r'ProxSARAH')
-line4, = plt.semilogy(a_4 * pass1, S4, linestyle='-', linewidth=2.5, marker=">", color='limegreen', label=r'Prox-Spiderboost')
-# line4, = plt.semilogy(pass4, S4, linestyle='-', linewidth=2.5, marker=">", color='limegreen', label=r'Prox-Spiderboost')
-line5, = plt.semilogy(a_5 * pass1, S5, linestyle='-', linewidth=2.5, marker="s", color='silver', label=r'ProxSVRG+')
-line6, = plt.semilogy(a_6 * pass1, S6, linestyle='-', linewidth=2.5, marker="<", color='gold', label=r'ProxHSGD-RS')
-# line7, = plt.semilogy(a_7 * pass1, S7, linestyle='--', linewidth=2, color='green', label=r'v7')
-# line8, = plt.semilogy(pass1, SS8, linestyle='-', linewidth=2.5, color='plum', label=r'MB-SARAH-RCBB(8)+')
-font1 = {'size': 7}
-plt.legend(handles=[line1, line2, line3, line4, line5, line6], prop=font1)
-# plt.savefig('D:\Fig\p4_gisette_G.eps', dpi=600)
+plt.legend(handles=[line1, line2, line3, line9], prop=font1)
 plt.show()
